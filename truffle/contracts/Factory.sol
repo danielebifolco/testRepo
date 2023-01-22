@@ -28,10 +28,6 @@ contract Factory is ERC721URIStorage, AccessControl{
     function givePermission (address newAdmin) public onlyRole(ADMIN){
         grantRole(ADMIN, newAdmin);
     }
-
-    /*function revokePermission (address oldAdmin) public onlyRole(ADMIN) {
-        revokeRole(ADMIN, oldAdmin);
-    }*/
      
     function openNewTender(string memory tokenURI) public onlyRole(ADMIN) returns(uint){
 
@@ -43,14 +39,14 @@ contract Factory is ERC721URIStorage, AccessControl{
         return _numOfProposal.current()-1;
     }
 
-    function Proposal(uint256 quote, uint num, address ind) public {
+    function Proposal(uint256 quote, uint num) public {
 
         require(tenders[num].status);
-        tenders[num].proposal.sendProposal(ind,quote);
+        tenders[num].proposal.sendProposal(msg.sender,quote);
 
     }
 
-    function assignWinner(uint256 num) public onlyRole(ADMIN) returns(address){
+    function assignWinner(uint256 num) public onlyRole(ADMIN) {
         
         require(tenders[num].status);
         tenders[num].proposal.closeTender();
@@ -58,8 +54,6 @@ contract Factory is ERC721URIStorage, AccessControl{
         address winner = tenders[num].proposal.proposalEvaluation();
         _mint(winner, num);
         _setTokenURI(num, tenders[num].URI);
-
-        return winner;
     }
 
     function getTenders() public view returns (Tender[] memory) {
@@ -75,5 +69,4 @@ contract Factory is ERC721URIStorage, AccessControl{
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
-
 }

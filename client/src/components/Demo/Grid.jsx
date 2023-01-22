@@ -1,40 +1,49 @@
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 import '@inovua/reactdatagrid-community/index.css'
-import { useState, useEffect, useCallback, ReactDOM } from "react";
+import { useState, useEffect, useCallback } from "react";
 import useEth from "../../contexts/EthContext/useEth";
 import Button from '@inovua/reactdatagrid-community/packages/Button';
-import "./style.css"
+import 'react-notifications/lib/notifications.css';
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import "./style.css";
 
 function Grid(){
      
     const defaultColumns = ({visible}) =>{
         return [
-        { name: 'id', header: 'ID', maxWidth: 50, defaultFlex: 1 },
+        { name:'status', header: 'Status', maxWidth: 100, defaultFlex: 1,visible:false},
+        { name:'winner', header: 'winn', maxWidth: 100, defaultFlex: 1,visible:false},
+        { name: 'id', header: 'ID', maxWidth: 100, defaultFlex: 1 },
         { name: 'name', header: 'Name', maxWidth: 200, defaultFlex: 1 },
         { name: 'quote', header: 'Quote', maxWidth: 200, defaultFlex: 1 },
-        { name: 'expire', header: 'Expire', maxWidth: 200, defaultFlex: 1, visible},
-        { name: 'proposal', header: 'Proposal', maxWidth: 1000, defaultFlex: 1,
+        { name: 'expire', header: 'Expire', maxWidth: 200, defaultFlex: 1},
+        { name: 'proposal', header: 'Proposal', maxWidth: 200, defaultFlex: 1, 
             render: ({ data }) =>{
                 return  <div style={{ display: 'inline-block' }}>
-                            <Button onClick={ () => {showForm(data.id)}}>New Proposal</Button>
+                            {data.status && <Button onClick={ () => {showForm(data.id)}}>New Proposal</Button>}
                         </div>
-            }
+            }, visible : !visible
         },
-        { name: 'winner', header: 'Select Winner', maxWidth: 1000, defaultFlex: 1,
+        { name: 'Selectwinner', header: 'Select Winner', maxWidth: 1000, defaultFlex: 1,
             render: ({ data }) =>{
+               
                 return  <div style={{ display: 'inline-block' }}>
-                            <Button onClick={ () => {showForm(data.id)}}>New Proposal</Button>
-                        </div>
+                                {data.status ? <Button onClick={ async () => {
+                                                        const win = await winner(data.id);
+                                                        console.log("Winner", win);
+                                                        NotificationManager.success('The winner is:' + win, 'Success');
+                                }}>Winner</Button>: data.winner}
+                            </div>
+                
             },visible
         }
         
       ]};
     const [dataSource, setDataSource] = useState([]);
-
     const [proposalQuote,setProposalQuote] = useState(0);
 
-    const [visible, setVisible] = useState(false)
-    const [columns, setColumns] = useState(defaultColumns({ visible }))
+    const [visible, setVisible] = useState(false);
+    const [columns, setColumns] = useState(defaultColumns({ visible }));
 
 
     const{state : {contract, accounts, owner}} = useEth();
@@ -64,33 +73,28 @@ function Grid(){
         if(tenders){
             console.log(tenders);
             for (const tender of tenders){
-                if(tender.status){
-                    const tempTender = JSON.parse(tender.URI);
-                    tempTender.id = tender.id;
-                    data.push(tempTender);
-                }
+                const tempTender = JSON.parse(tender.URI);
+                tempTender.status = tender.status;
+                tempTender.id = tender.id;
+                data.push(tempTender);
                 console.log("data: ",data);
             }
         }
             console.log("owner:",owner);
             console.log("visib: ", visible);
-        
-       ;
-        
         setDataSource(data);
         }
     }
+
     
-    /*useEffect(() => {
-        const tryReadTender = () => {
-            try {
-                readTender();
-            } catch (err) {
-                console.error(err);
-            }
-            };
-            tryReadTender();
-    }, [contract]);*/
+    useEffect(() => {
+        setVisible(owner);
+        setColumns(defaultColumns({ visible }));
+        setDataSource([]);
+        
+       //this.forceUpdate();
+    }, [owner, accounts]);
+
 
     const openNewTender = async () => { 
         console.log(contract);
@@ -102,14 +106,25 @@ function Grid(){
         indexTender = await contract.methods.openNewTender(JSON.stringify(temp)).send({ from: accounts[0]});
     }
     const newProposal = async (quote,id) => {
-        await contract.methods.Proposal(quote,id, accounts[0]).send({ from: accounts[0]});
+        await contract.methods.Proposal(quote,id).send({ from: accounts[0]});
         hideForm();
     }
 
-    const winner = async () => {
-        const winne = await contract.methods.assignWinner(0).call({ from: accounts[0]});
-        console.log(winne);
+    const winner = async (id) => {
+        let data2;
+        console.log("id: ", id);
+        const winne = await contract.methods.assignWinner(id).send({ from: accounts[0]});
+        const addressWinner= contract.methods.ownerOf(id).call({from: accounts[0]});
+        console.log("Winnne1: ", addressWinner);
+        data2=dataSource;
+        data2[id].winner=addressWinner;
+        console.log("data2: ",data2);
+        setDataSource(data2);
+        //readTender();
+        return addressWinner;
     };
+
+    
     const nameInputChange = e => {        
           setTenderName(e.target.value);
       };
@@ -145,12 +160,13 @@ function Grid(){
     return (
         
         <div >
-            <Button onClick={() => {
-                            setVisible(owner)
-                            console.log("owner1: ", owner);
-                            console.log("visib1: ", visible);
-                            setColumns(defaultColumns({ visible }))
-                            readTender()}
+            <div>
+                {show && renderForm}
+            </div>
+            <Button onClick={() =>  {
+                            readTender();
+                            setColumns(defaultColumns({ visible }));
+}
                         } 
                 style={{marginRight: 10}}>
                 Load async data
@@ -184,6 +200,7 @@ function Grid(){
                     style={gridStyle}
                 />
             </div>
+            <NotificationContainer/>
 
         </div>
         );
