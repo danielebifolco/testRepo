@@ -1,72 +1,61 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.5.16;
-
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./ProposalManagement.sol";
-
-
-contract Factory is ERC721URIStorage, AccessControl{
-
+import "./NFTColl.sol";
+contract Factory is AccessControl {
     bytes32 public constant ADMIN = keccak256("ADMIN");
     using Counters for Counters.Counter;
-    struct Tender{
-        uint256 id;
-        bool status;
+    struct Tend {
+        uint id;
+        bool stat;
         string URI;
         ProposalManagement proposal;
+        address win;
     }
+    Tend[] private tends;
+    Counters.Counter private _numProp;
+    NFTColl private NFT;
 
-    Tender[] private tenders;
-    Counters.Counter private _numOfProposal;
-    
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
+    constructor(string memory name, string memory symbol) {
+        NFT=new NFTColl(name,symbol);
         _grantRole(ADMIN, msg.sender);
     }
 
-    function givePermission (address newAdmin) public onlyRole(ADMIN){
-        grantRole(ADMIN, newAdmin);
-    }
-     
-    function openNewTender(string memory tokenURI) public onlyRole(ADMIN) returns(uint){
-
+    function openNewTender(string memory tokenURI)
+        public
+        onlyRole(ADMIN)
+        returns (uint)
+    {
         ProposalManagement newProposal = new ProposalManagement();
         newProposal.openTender();
-        tenders.push(Tender(_numOfProposal.current(),true,tokenURI,newProposal));
-        _numOfProposal.increment();
-
-        return _numOfProposal.current()-1;
+        tends.push(
+            Tend(_numProp.current(), true, tokenURI, newProposal, address(0))
+        );
+        _numProp.increment();
+        return _numProp.current() - 1;
     }
 
-    function Proposal(uint256 quote, uint num) public {
-
-        require(tenders[num].status);
-        tenders[num].proposal.sendProposal(msg.sender,quote);
-
+    function Proposal(uint quote, uint num) public {
+        require(tends[num].stat);
+        tends[num].proposal.sendProposal(msg.sender, quote);
     }
 
-    function assignWinner(uint256 num) public onlyRole(ADMIN) {
-        
-        require(tenders[num].status);
-        tenders[num].proposal.closeTender();
-        tenders[num].status=false;
-        address winner = tenders[num].proposal.proposalEvaluation();
-        _mint(winner, num);
-        _setTokenURI(num, tenders[num].URI);
+    function assignWinner(uint num) public onlyRole(ADMIN) {
+        require(tends[num].stat);
+        tends[num].proposal.closeTender();
+        tends[num].stat = false;
+        tends[num].win = tends[num].proposal.proposalEvaluation();
+        NFT.Mint(tends[num].win, num, tends[num].URI);
     }
 
-    function getTenders() public view returns (Tender[] memory) {
-        Tender[] memory output= new Tender[](_numOfProposal.current());
-        for(uint i = 0; i < _numOfProposal.current(); i++){
-            Tender storage temp = tenders[i];
-            output[i]=temp;
+    function getTends() public view returns (Tend[] memory) {
+        Tend[] memory output = new Tend[](_numProp.current());
+        for (uint i = 0; i < _numProp.current(); i++) {
+            Tend storage temp = tends[i];
+            output[i] = temp;
         }
-
         return output;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, AccessControl) returns (bool) {
-        return super.supportsInterface(interfaceId);
     }
 }

@@ -9,7 +9,7 @@ import Grid from "./components/Demo/Grid";
 function App() {
   return (
     <EthProvider>
-      <div id="App" >
+      <div  id="App" >
         <div className="container">
           <Intro />
           <hr />

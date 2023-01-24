@@ -11,9 +11,14 @@
   }
   
   input[type="text"],
-  input[type="password"] {
+  input[type="password"],
+  input[type="number"],
+  input[type="date"] {
     height: 25px;
     border: 1px solid rgba(0, 0, 0, 0.2);
+    display: flex;
+    margin-top: 2%;
+    margin-bottom: 2%;
   }
   
   input[type="submit"] {
@@ -35,10 +40,11 @@
     justify-content: center;
   }
   
-  .login-form {
+  .show-form {
     background-color: white;
     padding: 2rem;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    align-content: center;
   }
   
   .list-container {
