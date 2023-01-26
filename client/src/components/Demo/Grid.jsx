@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import useEth from "../../contexts/EthContext/useEth";
 import Button from '@inovua/reactdatagrid-community/packages/Button';
 import "./style.css";
-
+import { Modal } from 'bootstrap';
 
 function Grid() {
 
@@ -28,7 +28,19 @@ function Grid() {
                 render: ({ value, data }) => {
 
                     return <div style={{ display: 'inline-block' }}>
-                        <Button onClick={() => winner(data.id)} disabled={!data.status}>Winner</Button>
+                        <Button onClick={() => {
+                            const now = new Date();
+                            const tempdate = data.expire.split('-');
+                            const date = new Date (tempdate[0],tempdate[1]-1,tempdate[2]);
+                            if(Number(date)<=Number(now)){
+                                winner(data.id)
+                            }else{
+                                console.log("errore winner")
+                                alert("Can not close Tender before Expire Date")
+                            }
+                                        }
+                            } 
+                            disabled={!data.status}>Winner</Button>
                     </div>
 
                 }, visible
@@ -188,7 +200,7 @@ function Grid() {
         }
     }
 
-    const renderForm = (
+    const prposalForm = (
         <div id = "proposalForm" className="show-form" style = {{display:"none"}}>
             <div className="input-container">
                 <label>Quote </label>
@@ -220,8 +232,8 @@ function Grid() {
     return (
 
         <div >
-            <div>
-                {renderForm}
+            <div style={{justifyContent:"center"}}>
+                {prposalForm}
             </div>
             <Button onClick={() => {
                 readTender();
@@ -236,33 +248,40 @@ function Grid() {
                 Add new Tender        
             </Button>}
             <div id = "newTenderForm" className="show-form" style = {{display:"none"}}>
-                <input
-                    id= 'inputName'
-                    placeholder='Name'
-                    type="text"
-                    value={tenderName}
-                    onChange={nameInputChange}
-                />
-                <input
-                
-                    id= 'inputQuote'
-                    placeholder='Quote'
-                    type="number"
-                    value={tenderQuote}
-                    onChange={quoteInputChange}
-                />
-                <input
-                    id= 'inputDate'
-                    placeholder='Expire'
-                    type="date"
-                    value={tenderExpire}
-                    onChange={expireInputChange}
-                    min = {new Date().toISOString().split("T")[0]}
+                <div className='input-container'>
+                    <label>Name </label>
+                    <input
+                        id= 'inputName'
+                        placeholder='Name'
+                        type="text"
+                        value={tenderName}
+                        onChange={nameInputChange}
+                    />
+                    <label>Quote </label>
+                    <input
                     
-                />
+                        id= 'inputQuote'
+                        placeholder='Quote'
+                        type="number"
+                        value={tenderQuote}
+                        onChange={quoteInputChange}
+                    />
+                    <label>Expire Date </label>
+                    <input
+                        id= 'inputDate'
+                        placeholder='Expire'
+                        type="date"
+                        value={tenderExpire}
+                        onChange={expireInputChange}
+                        min = {new Date().toISOString().split("T")[0]}
+                        
+                    />
+                </div>
+                <div className='button-container'>
                 <Button onClick={validateTenderForm}>
                     Create New Tender
                 </Button>
+                </div>
             </div>
             <div id="Grid-div">
                 <ReactDataGrid
