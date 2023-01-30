@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
-pragma solidity >=0.5.16;
+pragma solidity >=0.8.8;
 //portare la versione di solidity a 0.8.0
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
@@ -30,13 +30,15 @@ library IterableMapping {
 
     function set(Map storage map, address key, uint val) internal {
     
-    //Each participant can submit only one proposal
+    //Each participant can submit only one proposals
         if (!map.inserted[key]) {
             map.inserted[key] = true;
             map.values[key] = val;
             map.indexOf[key] = map.keys.length;
             map.keys.push(key);
-        }
+        }else{
+			revert("value waw submitted 2 times");
+		}
     }
 
     function remove(Map storage map, address key) internal {
@@ -59,11 +61,11 @@ library IterableMapping {
     }
 }
 
-contract ProposalManagement is Ownable{
+contract Tender is Ownable{
 
 	using IterableMapping for IterableMapping.Map;
 
-	enum Stages {
+	enum Status {
 		Open,
 		Close
 	}
@@ -71,29 +73,29 @@ contract ProposalManagement is Ownable{
 	// Function cannot be called at this time.
 	error FunctionInvalidAtThisStage();
 
-	// This is the current stage.
-	Stages private stage = Stages.Close;
+	// This is the current status.
+	Status private status = Status.Close;
 	IterableMapping.Map private proposals;
 	address private winner;
 
-	//stage modifier
-	modifier atStage(Stages stage_) {
-	if (stage != stage_)
+	//status modifier
+	modifier atStage(Status stage_) {
+	if (status != stage_)
 	    revert FunctionInvalidAtThisStage();
 	_;
 	}
 
 	//GET and SET functions
-	function openTender() public view onlyOwner{
-		stage = Stages.Open;
+	function openTender() public onlyOwner{
+		status = Status.Open;
 	}
 
-	function closeTender() public view onlyOwner{
-		stage = Stages.Close;
+	function closeTender() public onlyOwner{
+		status = Status.Close;
 	}
 
 	function getStatus() public view onlyOwner returns(bool){
-		if (stage == Stages.Open){
+		if (status == Status.Open){
 			return true;
 		}else{
 			return false;
@@ -101,13 +103,13 @@ contract ProposalManagement is Ownable{
 	}
 	
 	//core functions
-	function proposalEvaluation() public onlyOwner atStage(Stages.Close) returns (address){
+	function proposalEvaluation() public onlyOwner atStage(Status.Close) returns (address){
 		uint256 min;
-		min = proposal.get(proposal.getKeyAtIndex(0));
+		min = proposals.get(proposals.getKeyAtIndex(0));
 
-		for (uint i=0; i<proposal.size(); i++) {
-	    		address participant = proposal.getKeyAtIndex(i);
-	    		uint256 value= proposal.get(participant);
+		for (uint i=0; i<proposals.size(); i++) {
+	    		address participant = proposals.getKeyAtIndex(i);
+	    		uint256 value= proposals.get(participant);
 	    		if (value <= min ){
 				min = value;
 				winner = participant;
@@ -116,12 +118,11 @@ contract ProposalManagement is Ownable{
 		return winner; 
 	}
 	
-	function sendProposal(address participant, uint256 newQuote) public onlyOwner atStage(Stages.Open){
+	function sendProposal(address participant, uint256 newQuote) public onlyOwner atStage(Status.Open){
 		//Checks, migliorare i controlli
 		require(newQuote>=0);
-		
 		//Effects
-		proposal.set(participant, newQuote);
+		proposals.set(participant, newQuote);
 
 	}
 }

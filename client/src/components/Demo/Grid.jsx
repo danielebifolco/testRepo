@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import useEth from "../../contexts/EthContext/useEth";
 import Button from '@inovua/reactdatagrid-community/packages/Button';
 import "./style.css";
-import { Modal } from 'bootstrap';
 
 function Grid() {
 
@@ -29,18 +28,17 @@ function Grid() {
 
                     return <div style={{ display: 'inline-block' }}>
                         <Button onClick={() => {
-                            const now = new Date();
-                            const tempdate = data.expire.split('-');
-                            const date = new Date (tempdate[0],tempdate[1]-1,tempdate[2]);
-                            if(Number(date)<=Number(now)){
-                                winner(data.id)
-                            }else{
-                                console.log("errore winner")
-                                alert("Can not close Tender before Expire Date")
-                            }
-                                        }
+                                    const now = new Date();
+                                    const tempdate = data.expire.split('-');
+                                    const date = new Date (tempdate[0],tempdate[1]-1,tempdate[2]);
+                                    if(Number(date)<=Number(now)){
+                                        winner(data.id)
+                                    }else{
+                                        alert("Can not close Tender before Expire Date")
+                                    }
+                                }
                             } 
-                            disabled={!data.status}>Winner</Button>
+                            disabled={data.status}>Winner</Button>
                     </div>
 
                 }, visible
@@ -53,7 +51,7 @@ function Grid() {
     const { state: { contract, accounts, owner } } = useEth();
     
     const [dataSource, setDataSource] = useState([]);
-    const [proposalQuote, setProposalQuote] = useState(0);
+    const [proposalQuote, setProposalQuote] = useState("");
     const [visible, setVisible] = useState(false);
     const [columns, setColumns] = useState(defaultColumns({ visible }));
     const [tenderName, setTenderName] = useState("");
@@ -70,30 +68,25 @@ function Grid() {
 
     //invocare le funzioni messe a disposizione dai contratti
     const readTender = async () => {
-        console.debug("Contract", contract);
         try{
             if (contract) {
-                const tenders = await contract.methods.getTends().call({ from: accounts[0] });
-                console.log("tenders", tenders);
+                const tenders = await contract.methods.getTenders().call({ from: accounts[0] });
                 let data = [];
+                console.log(tenders)
                 if (tenders) {
-                    console.log(tenders);
                     for (const tender of tenders) {
                         const tempTender = JSON.parse(tender.URI);
-                        tempTender.status = tender.stat;
+                        tempTender.status = tender.status;
                         tempTender.id = tender.id;
-                        console.log("ida ora", tender.id);
-                        if (!tender.stat) {
+                        console.log(tenders)
+                        if (!tender.status) {
                             tempTender.winner = tender.win;
                         } else {
                             tempTender.winner = "";
                         }
                         data.push(tempTender);
-                        console.log("data: ", data);
                     }
                 }
-                console.log("owner:", owner);
-                console.log("visib: ", visible);
                 setDataSource(data);
             } 
         }catch(err){
@@ -103,7 +96,6 @@ function Grid() {
 
 
     const openNewTender = async () => {
-        console.log(contract);
         try{
             const temp = {
                 name: tenderName,
@@ -119,7 +111,7 @@ function Grid() {
 
     const newProposal = async (quote, id) => {
         try{
-            await contract.methods.Proposal(quote, id).send({ from: accounts[0] });
+            console.log(await contract.methods.newProposal(quote, id).send({ from: accounts[0] }));
             showProposalForm();
         }catch(err){
             console.debug(err);
@@ -127,7 +119,6 @@ function Grid() {
     }
 
     const winner = async (id) => {
-        console.log("id: ", id);
         try{
             await contract.methods.assignWinner(id).send({ from: accounts[0] });
             readTender();
@@ -165,10 +156,8 @@ function Grid() {
         if (proposalForm.style.display  === "none"){
             setRowId(id)
             proposalForm.style.display = "block";
-            console.debug("id: ", id);
         }else {
             proposalForm.style.display = "none";
-            console.debug("id: ", id);
         }
     }
     const validateTenderForm = () => {
@@ -199,17 +188,26 @@ function Grid() {
             openNewTender();
         }
     }
+    const validateProposalForm = () => {
+        const inProposal = document.getElementById("inputProposal");
+
+        if(proposalQuote > 0 && proposalQuote <= dataSource[rowId].quote){
+            newProposal(proposalQuote, rowId)
+        }else {
+            inProposal.style.borderColor  = 'red';
+        }
+    }
 
     const prposalForm = (
         <div id = "proposalForm" className="show-form" style = {{display:"none"}}>
             <div className="input-container">
                 <label>Quote </label>
-                <input type="number" required
+                <input id = "inputProposal" type="number" required
                     value={proposalQuote}
                     onChange={proposalInputChange} />
             </div>
             <div className="button-container">
-                <Button onClick={() => { newProposal(proposalQuote, rowId) }}>
+                <Button onClick={validateProposalForm }>
                     Send Proposal
                 </Button>
             </div>
