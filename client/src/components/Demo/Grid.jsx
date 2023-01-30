@@ -240,11 +240,11 @@ function Grid() {
                 setColumns(defaultColumns({ visible }));
             }
             }
-                style={{ marginRight: 10 }}>
+                style={{ marginRight: 10, marginBottom:10 }}>
                 Load async data
             </Button>
             {owner && <Button onClick={showTenderForm}
-                style={{ marginRight: 10 }}>
+                style={{ marginRight: 10, marginBottom:10 }}>
                 Add new Tender        
             </Button>}
             <div id = "newTenderForm" className="show-form" style = {{display:"none"}}>
