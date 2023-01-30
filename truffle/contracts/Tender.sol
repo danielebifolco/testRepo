@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.5.16;
+//portare la versione di solidity a 0.8.0
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
@@ -28,9 +29,9 @@ library IterableMapping {
     }
 
     function set(Map storage map, address key, uint val) internal {
-        if (map.inserted[key]) {
-            map.values[key] = val;
-        } else {
+    
+    //Each participant can submit only one proposal
+        if (!map.inserted[key]) {
             map.inserted[key] = true;
             map.values[key] = val;
             map.indexOf[key] = map.keys.length;
@@ -58,58 +59,69 @@ library IterableMapping {
     }
 }
 
-contract ProposalManagement is AccessControl{
-    
-    bytes32 public constant ADMIN = keccak256("ADMIN");
-    using IterableMapping for IterableMapping.Map;
-    IterableMapping.Map private proposal;
-    bool private status = false;
-    address winner;
+contract ProposalManagement is Ownable{
 
-    constructor (){
-        _grantRole(ADMIN, msg.sender);
-    }
+	using IterableMapping for IterableMapping.Map;
 
-    function givePermission (address newAdmin) public onlyRole(ADMIN){
-        grantRole(ADMIN, newAdmin);
-    }
-
-    function revokePermission (address oldAdmin) public onlyRole(ADMIN) {
-        revokeRole(ADMIN, oldAdmin);
-    }
-
-	function sendProposal(address participant, uint256 newQuote) public onlyRole(ADMIN){
-		require(status);
-		proposal.set(participant, newQuote);
-		
+	enum Stages {
+		Open,
+		Close
 	}
 
-	function openTender() public onlyRole(ADMIN) {
-		status = true;
+	// Function cannot be called at this time.
+	error FunctionInvalidAtThisStage();
+
+	// This is the current stage.
+	Stages private stage = Stages.Close;
+	IterableMapping.Map private proposals;
+	address private winner;
+
+	//stage modifier
+	modifier atStage(Stages stage_) {
+	if (stage != stage_)
+	    revert FunctionInvalidAtThisStage();
+	_;
 	}
 
-	function closeTender() public onlyRole(ADMIN){
-		status = false;
+	//GET and SET functions
+	function openTender() public view onlyOwner{
+		stage = Stages.Open;
 	}
 
-    function getStatus() public view onlyRole(ADMIN)returns(bool){
-        return status;
-    }
+	function closeTender() public view onlyOwner{
+		stage = Stages.Close;
+	}
 
-	function proposalEvaluation() external onlyRole(ADMIN) returns (address){
-        
-        require(!status);
-        uint256 min;
+	function getStatus() public view onlyOwner returns(bool){
+		if (stage == Stages.Open){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	//core functions
+	function proposalEvaluation() public onlyOwner atStage(Stages.Close) returns (address){
+		uint256 min;
 		min = proposal.get(proposal.getKeyAtIndex(0));
 
 		for (uint i=0; i<proposal.size(); i++) {
-            address participant = proposal.getKeyAtIndex(i);
-            uint256 value= proposal.get(participant);
-            if (value <= min ){
-            	min = value;
-            	winner = participant;
-            }
-        }
-        return winner; 
+	    		address participant = proposal.getKeyAtIndex(i);
+	    		uint256 value= proposal.get(participant);
+	    		if (value <= min ){
+				min = value;
+				winner = participant;
+	    		}
+		}
+		return winner; 
+	}
+	
+	function sendProposal(address participant, uint256 newQuote) public onlyOwner atStage(Stages.Open){
+		//Checks, migliorare i controlli
+		require(newQuote>=0);
+		
+		//Effects
+		proposal.set(participant, newQuote);
+
 	}
 }
