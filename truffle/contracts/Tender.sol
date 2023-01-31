@@ -103,7 +103,7 @@ contract Tender is Ownable{
 	}
 	
 	//core functions
-	function proposalEvaluation() public onlyOwner atStage(Status.Close) returns (address){
+	function proposalEvaluation() public onlyOwner atStage(Status.Close) returns (address, uint){
 		uint256 min;
 		min = proposals.get(proposals.getKeyAtIndex(0));
 
@@ -115,7 +115,7 @@ contract Tender is Ownable{
 				winner = participant;
 	    		}
 		}
-		return winner; 
+		return (winner,min); 
 	}
 	
 	function sendProposal(address participant, uint256 newQuote) public onlyOwner atStage(Status.Open){
