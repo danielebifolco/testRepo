@@ -41,11 +41,12 @@ contract TenderFactory is AccessControl {
     }
 
     function assignWinner(uint id) public onlyRole(ADMIN) {
+        uint256 min;
         require(tendersInfo[id].status);
         tendersInfo[id].tender.closeTender();
         tendersInfo[id].status = false;
-        tendersInfo[id].win = tendersInfo[id].tender.proposalEvaluation();
-        NFT.Mint(tendersInfo[id].win, id, tendersInfo[id].URI);
+        (tendersInfo[id].win,min) = tendersInfo[id].tender.proposalEvaluation();
+        NFT.Mint(tendersInfo[id].win, id, tendersInfo[id].URI,min);
     }
 
     function getTenders() public view returns (TenderInfo[] memory) {
