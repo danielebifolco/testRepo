@@ -31,24 +31,36 @@ function Grid() {
                                     const now = new Date();
                                     const tempdate = data.expire.split('-');
                                     const date = new Date (tempdate[0],tempdate[1]-1,tempdate[2]);
-                                    if(Number(date)<=Number(now)){
+                                    //if(Number(date)<=Number(now)){
                                         winner(data.id)
-                                    }else{
+                                    /*}else{
                                         alert("Can not close Tender before Expire Date")
-                                    }
+                                    }*/
                                 }
                             } 
-                            disabled={data.status}>Winner</Button>
+                           //</div> disabled={data.status}
+                           >Winner</Button>
                     </div>
 
                 }, visible
             },
             { name: 'winner', header: 'Winner', minWidth: 400, defaultFlex: 1 },
+            {
+                name: 'pay', header: 'Pay', maxWidth: 200,minWidth: 150, defaultFlex: 1,
+                render: ({data}) => {
+                    return <div style={{ display: 'inline-block' }}>
+                        <Button onClick={async() => { 
+                            const quoteToSent = await contractNFT.methods.getQuote(data.winner).call({from:accounts[0]})
+                            const amountToSend = await web3.utils.toWei(quoteToSent, "ether"); 
+                            await contractNFT.methods.sendEth(data.winner).send({ value: amountToSend ,from: accounts[0] });}} >Pay</Button>
+                    </div>
+                }
+            }
             
         ]
     };
     
-    const { state: { contract, accounts, owner } } = useEth();
+    const { state: { contract, accounts, owner, contractNFT, web3 } } = useEth();
     
     const [dataSource, setDataSource] = useState([]);
     const [proposalQuote, setProposalQuote] = useState("");
@@ -190,9 +202,8 @@ function Grid() {
     }
     const validateProposalForm = () => {
         const inProposal = document.getElementById("inputProposal");
-
-        if(proposalQuote > 0 && proposalQuote <= dataSource[rowId].quote){
-            newProposal(proposalQuote, rowId)
+        if((Number(proposalQuote) > 0) && (Number(proposalQuote) <= Number(dataSource[rowId].quote))){
+            newProposal(proposalQuote, rowId);
         }else {
             inProposal.style.borderColor  = 'red';
         }

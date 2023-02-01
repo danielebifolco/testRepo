@@ -20,8 +20,8 @@ contract TenderFactory is AccessControl {
     Counters.Counter private _numTender;
     NFTColl private NFT;
 
-    constructor(string memory name, string memory symbol) {
-        NFT=new NFTColl(name,symbol);
+    constructor(address NFTAddress) {
+        NFT=NFTColl(NFTAddress);
         _grantRole(ADMIN, msg.sender);
     }
 
