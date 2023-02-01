@@ -45,8 +45,8 @@ contract TenderFactory is AccessControl {
         require(tendersInfo[id].status);
         tendersInfo[id].tender.closeTender();
         tendersInfo[id].status = false;
-        (tendersInfo[id].win,min) = tendersInfo[id].tender.proposalEvaluation();
-        NFT.Mint(tendersInfo[id].win, id, tendersInfo[id].URI,min);
+        tendersInfo[id].win = tendersInfo[id].tender.proposalEvaluation();
+        NFT.Mint(tendersInfo[id].win, id, tendersInfo[id].URI);
     }
 
     function getTenders() public view returns (TenderInfo[] memory) {

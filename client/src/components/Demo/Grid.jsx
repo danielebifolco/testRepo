@@ -94,7 +94,6 @@ function Grid() {
         }
     }
 
-
     const openNewTender = async () => {
         try{
             const temp = {
@@ -221,9 +220,6 @@ function Grid() {
             rowProps.style.color = '#808080'
         }
     }
-
-   
-   
 
     const gridStyle = { minHeight: 550, minWidth: 1000 };
     
