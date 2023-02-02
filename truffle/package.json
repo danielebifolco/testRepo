@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.16",
     "lite-server": "^2.3.0",
     "react-error-overlay": "^6.0.9"
   },

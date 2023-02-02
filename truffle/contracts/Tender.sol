@@ -120,7 +120,7 @@ contract Tender is Ownable{
 	
 	function sendProposal(address participant, uint256 newQuote) public onlyOwner atStage(Status.Open){
 		//Checks, migliorare i controlli
-		require(newQuote>=0);
+		require(newQuote>0);
 		//Effects
 		proposals.set(participant, newQuote);
 

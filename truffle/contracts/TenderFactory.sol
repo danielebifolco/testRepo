@@ -20,6 +20,12 @@ contract TenderFactory is AccessControl {
     Counters.Counter private _numTender;
     NFTColl private NFT;
 
+    modifier notAdmin(address partecipant) {
+	if (hasRole(ADMIN,partecipant))
+	    revert ();
+	_;
+	}
+
     constructor(string memory name, string memory symbol) {
         NFT=new NFTColl(name,symbol);
         _grantRole(ADMIN, msg.sender);
@@ -35,14 +41,15 @@ contract TenderFactory is AccessControl {
         _numTender.increment();
     }
 
-    function newProposal(uint quote, uint id) public {
+    function newProposal(uint quote, uint id) public notAdmin(msg.sender) {
         require(tendersInfo[id].status);
         tendersInfo[id].tender.sendProposal(msg.sender, quote);
     }
 
     function assignWinner(uint id) public onlyRole(ADMIN) {
-        uint256 min;
         require(tendersInfo[id].status);
+
+        uint256 min;
         tendersInfo[id].tender.closeTender();
         tendersInfo[id].status = false;
         tendersInfo[id].win = tendersInfo[id].tender.proposalEvaluation();
