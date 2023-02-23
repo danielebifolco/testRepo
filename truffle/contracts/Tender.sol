@@ -112,6 +112,7 @@ contract Tender is Ownable {
     //core functions
     function getWinner()
         public
+		view
         onlyOwner
         atStage(Status.Close)
         returns (address)

@@ -6,11 +6,9 @@ contract("TenderFactory", (accounts) => {
     const TenderFatoryInstace = await TenderFactory.deployed();
     const URI = "\{\"name\":\"appalto1\", \"quote\":\"1500\", \"expire\":\"2-02-2023\"\}";
     const tenderInfo=await TenderFatoryInstace.getTenders();
-    var lenghtPreTender= tenderInfo.lenght;
     await TenderFatoryInstace.openNewTender(URI,{from: accounts[0]});
     const newTenderInfo=await TenderFatoryInstace.getTenders();
-    var lenghtPostTender= newTenderInfo.lenght;
-    assert.notEqual(lenghtPreTender,lenghtPostTender,"The ADMIN wasn't able to create a new tender with correct URI")
+    assert.notEqual(tenderInfo,newTenderInfo,"The ADMIN wasn't able to create a new tender with correct URI")
   });
   it("Insert new Tender by owner with wrong URI", async () => {
     const TenderFatoryInstace = await TenderFactory.deployed();
