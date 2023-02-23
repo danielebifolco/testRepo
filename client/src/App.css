@@ -1,7 +1,5 @@
 #App {
-  margin: 2%;
-  padding: 1%;
-  display: flex;
+  display: block;
   align-items: center;
   font-size: 1.6rem;
   --primary-color: #1266cc;
@@ -10,14 +8,15 @@
   --gray: #999;
   --light-gray: #e0e0e0;
   --dark-gray: #777;
+  background-color: #d2dae1;
 }
 
 #App .container {
-  padding: 2%;
   display: block;
   align-items: center;
 
 }
+
 
 
 hr {

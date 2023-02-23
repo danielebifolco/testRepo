@@ -2,8 +2,8 @@ import ReactDataGrid from '@inovua/reactdatagrid-community';
 import '@inovua/reactdatagrid-community/index.css'
 import { useState, useEffect } from "react";
 import useEth from "../../contexts/EthContext/useEth";
-import Button from '@inovua/reactdatagrid-community/packages/Button';
 import "./style.css";
+import "@inovua/reactdatagrid-community/theme/blue-dark.css";
 
 function Grid() {
 
@@ -18,7 +18,7 @@ function Grid() {
                 name: 'proposal', header: 'Proposal', maxWidth: 200,minWidth: 150, defaultFlex: 1,
                 render: ({ data }) => {
                     return <div style={{ display: 'inline-block' }}>
-                        <Button onClick={() => { showProposalForm(data.id) }} disabled={!data.status}>New Proposal</Button>
+                        <button onClick={() => { showProposalForm(data.id) }} disabled={!data.status}>New Proposal</button>
                     </div>
                 }, visible: !visible
             },
@@ -27,7 +27,7 @@ function Grid() {
                 render: ({ value, data }) => {
 
                     return <div style={{ display: 'inline-block' }}>
-                        <Button onClick={() => {
+                        <button onClick={() => {
                                     const now = new Date();
                                     const tempdate = data.expire.split('-');
                                     const date = new Date (tempdate[0],tempdate[1]-1,tempdate[2]);
@@ -38,12 +38,12 @@ function Grid() {
                                     }
                                 }
                             } 
-                            disabled={data.status}>Winner</Button>
+                            disabled={data.status}>Winner</button>
                     </div>
 
                 }, visible
             },
-            { name: 'winner', header: 'Winner', minWidth: 400, defaultFlex: 1 },
+            { name: 'winner', header: 'Winner', minWidth: 400, defaultFlex: 1},
             
         ]
     };
@@ -72,13 +72,14 @@ function Grid() {
             if (contract) {
                 const tenders = await contract.methods.getTenders().call({ from: accounts[0] });
                 let data = [];
-                console.log(tenders)
+               
                 if (tenders) {
                     for (const tender of tenders) {
                         const tempTender = JSON.parse(tender.URI);
+                        console.log(tempTender)
                         tempTender.status = tender.status;
                         tempTender.id = tender.id;
-                        console.log(tenders)
+                        //console.log(tenders)
                         if (!tender.status) {
                             tempTender.winner = tender.win;
                         } else {
@@ -199,6 +200,7 @@ function Grid() {
 
     const prposalForm = (
         <div id = "proposalForm" className="show-form" style = {{display:"none"}}>
+                <img  src="close.png" height={15} onClick={showProposalForm} />
             <div className="input-container">
                 <label>Quote </label>
                 <input id = "inputProposal" type="number" required
@@ -206,42 +208,38 @@ function Grid() {
                     onChange={proposalInputChange} />
             </div>
             <div className="button-container">
-                <Button onClick={validateProposalForm }>
+                <button onClick={validateProposalForm }>
                     Send Proposal
-                </Button>
+                </button>
             </div>
         </div>
     );
     
-    const onRenderRow = (rowProps) => {
-        if (rowProps.data.status === true) {
-            rowProps.style.color = '#008f39'
-        } else {
-            rowProps.style.color = '#808080'
-        }
-    }
 
     const gridStyle = { minHeight: 550, minWidth: 1000 };
     
     return (
+        
+        <div id='contain'>
 
-        <div >
-            <div style={{justifyContent:"center"}}>
-                {prposalForm}
-            </div>
-            <Button onClick={() => {
+            <button onClick={() => {
                 readTender();
                 setColumns(defaultColumns({ visible }));
             }
             }
                 style={{ marginRight: 10, marginBottom:10 }}>
                 Load async data
-            </Button>
-            {owner && <Button onClick={showTenderForm}
+            </button>
+            {owner && <button onClick={showTenderForm}
                 style={{ marginRight: 10, marginBottom:10 }}>
                 Add new Tender        
-            </Button>}
+            </button>}
+            <div style={{justifyContent:"center"}}>
+                {prposalForm}
+            </div>
             <div id = "newTenderForm" className="show-form" style = {{display:"none"}}>
+                <img src="close.png" height={15} onClick={showTenderForm} />
+
                 <div className='input-container'>
                     <label>Name </label>
                     <input
@@ -272,9 +270,9 @@ function Grid() {
                     />
                 </div>
                 <div className='button-container'>
-                <Button onClick={validateTenderForm}>
+                <button onClick={validateTenderForm}>
                     Create New Tender
-                </Button>
+                </button>
                 </div>
             </div>
             <div id="Grid-div">
@@ -283,8 +281,11 @@ function Grid() {
                     idProperty="id"
                     columns={columns}
                     dataSource={dataSource}
-                    onRenderRow={onRenderRow}
+                    
                     style={gridStyle}
+                    theme= "blue-dark"
+                    rowHeight={60}
+                    showZebraRows={false}
                 />
             </div>
         </div>

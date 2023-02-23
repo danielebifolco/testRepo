@@ -7,10 +7,11 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "buffer": "^6.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.0",
-    "web3": "^1.7.5"
+    "web3": "^1.8.2"
   },
   "scripts": {
     "start": "react-scripts start --openssl-legacy-provider start",
@@ -39,5 +40,4 @@
   "overrides": {
     "react-error-overlay": "6.0.9"
   }
-  
 }

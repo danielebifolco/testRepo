@@ -3,14 +3,14 @@ import Intro from "./components/Intro/";
 import "./App.css";
 import Grid from "./components/Demo/Grid";
 import Welcome from "./components/Intro/Welcome";
+import Navbar from "./components/Demo/Navbar";
 
 function App() {
   return (
     <EthProvider>
       <div  id="App" >
+        <Navbar/>
         <div className="container">
-          <Welcome />
-       
           <Grid />
         </div>
       </div>
