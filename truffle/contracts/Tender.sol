@@ -11,34 +11,41 @@ library IterableMapping {
     // Iterable mapping from address to uint;
     struct Map {
         address[] keys;
-        mapping(address => uint) values;
-        mapping(address => uint) indexOf;
+        mapping(address => uint256) values;
+        mapping(address => uint256) indexOf;
         mapping(address => bool) inserted;
     }
 
-    function get(Map storage map, address key) internal view returns (uint) {
+    function get(Map storage map, address key) internal view returns (uint256) {
         return map.values[key];
     }
 
-    function getKeyAtIndex(Map storage map, uint index) internal view returns (address) {
+    function getKeyAtIndex(Map storage map, uint256 index)
+        internal
+        view
+        returns (address)
+    {
         return map.keys[index];
     }
 
-    function size(Map storage map) internal view returns (uint) {
+    function size(Map storage map) internal view returns (uint256) {
         return map.keys.length;
     }
 
-    function set(Map storage map, address key, uint val) internal {
-    
-    //Each participant can submit only one proposals
+    function set(
+        Map storage map,
+        address key,
+        uint256 val
+    ) internal {
+        //Each participant can submit only one proposals
         if (!map.inserted[key]) {
             map.inserted[key] = true;
             map.values[key] = val;
             map.indexOf[key] = map.keys.length;
             map.keys.push(key);
-        }else{
-			revert("value waw submitted 2 times");
-		}
+        } else {
+            revert("value waw submitted 2 times");
+        }
     }
 
     function remove(Map storage map, address key) internal {
@@ -49,8 +56,8 @@ library IterableMapping {
         delete map.inserted[key];
         delete map.values[key];
 
-        uint index = map.indexOf[key];
-        uint lastIndex = map.keys.length - 1;
+        uint256 index = map.indexOf[key];
+        uint256 lastIndex = map.keys.length - 1;
         address lastKey = map.keys[lastIndex];
 
         map.indexOf[lastKey] = index;
@@ -61,68 +68,69 @@ library IterableMapping {
     }
 }
 
-contract Tender is Ownable{
+contract Tender is Ownable {
+    using IterableMapping for IterableMapping.Map;
 
-	using IterableMapping for IterableMapping.Map;
+    enum Status {
+        Open,
+        Close
+    }
 
-	enum Status {
-		Open,
-		Close
-	}
+    // Function cannot be called at this time.
+    error FunctionInvalidAtThisStage();
 
-	// Function cannot be called at this time.
-	error FunctionInvalidAtThisStage();
+    // This is the current status.
+    Status private status = Status.Close;
+    IterableMapping.Map private proposals;
+    address private winner;
+    uint256 private minProposal = 0;
 
-	// This is the current status.
-	Status private status = Status.Close;
-	IterableMapping.Map private proposals;
-	address private winner;
+    //status modifier
+    modifier atStage(Status stage_) {
+        if (status != stage_) revert FunctionInvalidAtThisStage();
+        _;
+    }
 
-	//status modifier
-	modifier atStage(Status stage_) {
-	if (status != stage_)
-	    revert FunctionInvalidAtThisStage();
-	_;
-	}
+    //GET and SET functions
+    function openTender() public onlyOwner {
+        status = Status.Open;
+    }
 
-	//GET and SET functions
-	function openTender() public onlyOwner{
-		status = Status.Open;
-	}
+    function closeTender() public onlyOwner {
+		require(winner != address(0));
+        status = Status.Close;
+    }
 
-	function closeTender() public onlyOwner{
-		status = Status.Close;
-	}
+    function getStatus() public view onlyOwner returns (bool) {
+        if (status == Status.Open) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-	function getStatus() public view onlyOwner returns(bool){
-		if (status == Status.Open){
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	//core functions
-	function proposalEvaluation() public onlyOwner atStage(Status.Close) returns (address){
-		uint256 min;
-		min = proposals.get(proposals.getKeyAtIndex(0));
+    //core functions
+    function getWinner()
+        public
+        onlyOwner
+        atStage(Status.Close)
+        returns (address)
+    {
+        return (winner);
+    }
 
-		for (uint i=0; i<proposals.size(); i++) {
-	    		address participant = proposals.getKeyAtIndex(i);
-	    		uint256 value= proposals.get(participant);
-	    		if (value <= min ){
-				min = value;
-				winner = participant;
-	    		}
-		}
-		return (winner); 
-	}
-	
-	function sendProposal(address participant, uint256 newQuote) public onlyOwner atStage(Status.Open){
-		//Checks, migliorare i controlli
-		require(newQuote>0);
-		//Effects
-		proposals.set(participant, newQuote);
-
+    function sendProposal(address participant, uint256 newQuote)
+        public
+        onlyOwner
+        atStage(Status.Open)
+    {
+        //Checks, migliorare i controlli
+        require(newQuote > 0);
+        //Effects
+        proposals.set(participant, newQuote);
+        if ((minProposal == 0) || (newQuote < minProposal)){
+            minProposal = newQuote;
+            winner = participant;
+        } 
 	}
 }

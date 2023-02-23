@@ -48,20 +48,13 @@ contract TenderFactory is AccessControl {
 
     function assignWinner(uint id) public onlyRole(ADMIN) {
         require(tendersInfo[id].status);
-
-        uint256 min;
         tendersInfo[id].tender.closeTender();
         tendersInfo[id].status = false;
-        tendersInfo[id].win = tendersInfo[id].tender.proposalEvaluation();
+        tendersInfo[id].win = tendersInfo[id].tender.getWinner();
         NFT.Mint(tendersInfo[id].win, id, tendersInfo[id].URI);
     }
 
     function getTenders() public view returns (TenderInfo[] memory) {
-        TenderInfo[] memory output = new TenderInfo[](_numTender.current());
-        for (uint i = 0; i < _numTender.current(); i++) {
-            TenderInfo storage temp = tendersInfo[i];
-            output[i] = temp;
-        }
-        return output;
+        return tendersInfo;
     }
 }

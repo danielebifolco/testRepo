@@ -62,7 +62,7 @@ input[type="submit"]:hover {
 #proposalForm,
 #newTenderForm {
   left: 40%;
-  top: 30%;
+  top: 20%;
   z-index: 70;
   position: absolute;
 }
