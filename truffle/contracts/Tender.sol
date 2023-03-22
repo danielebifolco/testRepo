@@ -97,7 +97,7 @@ contract Tender is Ownable {
     }
 
     function closeTender() public onlyOwner {
-		require(winner != address(0));
+        require(winner != address(0));
         status = Status.Close;
     }
 
@@ -112,7 +112,7 @@ contract Tender is Ownable {
     //core functions
     function getWinner()
         public
-		view
+        view
         onlyOwner
         atStage(Status.Close)
         returns (address)
@@ -132,6 +132,6 @@ contract Tender is Ownable {
         if ((minProposal == 0) || (newQuote < minProposal)){
             minProposal = newQuote;
             winner = participant;
-        } 
-	}
+        }
+    }
 }

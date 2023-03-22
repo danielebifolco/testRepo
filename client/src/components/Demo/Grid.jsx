@@ -182,10 +182,11 @@ function Grid() {
         const now = new Date();
         const tempdate = inDate.value.split('-');
         const data = new Date(tempdate[0], tempdate[1] - 1, tempdate[2]);
-        /* if(isNaN(Number(data))|| Number(data)<Number(now)){
+        //check expire date of newTender
+        if(isNaN(Number(data))|| Number(data)<Number(now)){
             err = true;
             inDate.style.borderColor  = 'red';
-        } */
+        }
         if (!err) {
             openNewTender();
         }

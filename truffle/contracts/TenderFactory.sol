@@ -8,7 +8,7 @@ import "./NFTColl.sol";
 contract TenderFactory is AccessControl {
     using Counters for Counters.Counter;
     struct TenderInfo {
-        uint id;
+        uint256 id;
         bool status;
         string URI;
         Tender tender;
@@ -21,32 +21,43 @@ contract TenderFactory is AccessControl {
     NFTColl private NFT;
 
     modifier notAdmin(address partecipant) {
-	if (hasRole(ADMIN,partecipant))
-	    revert ();
-	_;
-	}
+        if (hasRole(ADMIN, partecipant)) revert();
+        _;
+    }
 
     constructor(string memory name, string memory symbol) {
-        NFT=new NFTColl(name,symbol);
+        NFT = new NFTColl(name, symbol);
         _grantRole(ADMIN, msg.sender);
     }
 
-    function openNewTender(string memory tokenURI)public onlyRole(ADMIN){
-        require (bytes(tokenURI).length > 0);
+    function openNewTender(string memory tokenURI) public onlyRole(ADMIN) {
+        require(bytes(tokenURI).length > 0);
         Tender newtender = new Tender();
         newtender.openTender();
         tendersInfo.push(
-            TenderInfo(_numTender.current(), true, tokenURI, newtender, address(0))
+            TenderInfo(
+                _numTender.current(),
+                true,
+                tokenURI,
+                newtender,
+                address(0)
+            )
         );
         _numTender.increment();
     }
 
-    function newProposal(uint quote, uint id) public notAdmin(msg.sender) {
+    function newProposal(uint256 quote, uint256 id)
+        public
+        notAdmin(msg.sender)
+    {
         require(tendersInfo[id].status);
         tendersInfo[id].tender.sendProposal(msg.sender, quote);
     }
 
-    function assignWinner(uint id) public onlyRole(ADMIN) {
+    function assignWinner(uint256 id) 
+        public 
+        onlyRole(ADMIN) 
+    {
         require(tendersInfo[id].status);
         tendersInfo[id].tender.closeTender();
         tendersInfo[id].status = false;
